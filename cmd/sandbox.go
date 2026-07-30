@@ -83,6 +83,7 @@ var sandboxListCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 
 var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 	info := operations.CreateInfo{}
+	retryMax := 0
 	cmd := &cobra.Command{
 		Use:     "create [template]",
 		Aliases: []string{"cr"},
@@ -144,10 +145,14 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 			if len(args) > 0 {
 				info.TemplateID = args[0]
 			}
+			if cmd.Flags().Changed("retry-max") {
+				info.RetryMax = &retryMax
+			}
 			operations.Create(info)
 		},
 	}
 	cmd.Flags().Int32VarP(&info.Timeout, "timeout", "t", 0, "sandbox timeout in seconds")
+	cmd.Flags().IntVar(&retryMax, "retry-max", 0, "maximum automatic retries for sandbox creation (0 disables retries; default uses SANDBOX_RETRY_MAX or 5)")
 	cmd.Flags().BoolVar(&info.Detach, "detach", false, "create sandbox without connecting terminal (sandbox stays alive until timeout)")
 	cmd.Flags().StringVarP(&info.Metadata, "metadata", "m", "", "metadata key=value pairs (comma-separated)")
 	cmd.Flags().StringArrayVarP(&info.EnvVars, "env-var", "e", nil, "environment variables (KEY=VALUE, can be specified multiple times)")
@@ -159,6 +164,7 @@ var sandboxCreateCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 }
 
 var sandboxConnectCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
+	retryMax := 0
 	cmd := &cobra.Command{
 		Use:     "connect <sandboxID>",
 		Aliases: []string{"cn"},
@@ -175,11 +181,14 @@ var sandboxConnectCmdBuilder = func(cfg *iqshell.Config) *cobra.Command {
 				_ = cmd.Usage()
 				return
 			}
-			operations.Connect(operations.ConnectInfo{
-				SandboxID: args[0],
-			})
+			info := operations.ConnectInfo{SandboxID: args[0]}
+			if cmd.Flags().Changed("retry-max") {
+				info.RetryMax = &retryMax
+			}
+			operations.Connect(info)
 		},
 	}
+	cmd.Flags().IntVar(&retryMax, "retry-max", 0, "maximum automatic retries for sandbox connection (0 disables retries; default uses SANDBOX_RETRY_MAX or 5)")
 	return cmd
 }
 

@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/termenv v0.16.0
-	github.com/qiniu/go-sdk/v7 v7.26.15
+	github.com/qiniu/go-sdk/v7 v7.27.0
 	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.1.3
@@ -30,7 +30,6 @@ require (
 	github.com/charmbracelet/x/ansi v0.9.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/gammazero/toposort v0.1.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect

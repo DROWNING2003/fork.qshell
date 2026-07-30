@@ -1,3 +1,11 @@
+# 2.19.11 (2026-07-30)
+## 新增
+1. `qshell sandbox create` 通过 SDK 请求幂等键支持安全重试；未显式指定幂等键时 SDK 会自动生成
+2. `sandbox create` 与 `sandbox connect` 支持可配置自动重试：默认最多重试 5 次，可通过 `--retry-max` 或 `SANDBOX_RETRY_MAX` 调整；重试会对 408、可重试的 5xx 和网络错误使用带抖动的指数退避，并响应 Context 取消
+
+## 更新
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.27.0`
+
 # 2.19.10 (2026-07-09)
 ## 更新
 1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.26.15`，修复 `BucketManager.GetBucketInfo` 在服务端未返回 `ctime` 字段时 `time.Parse(time.RFC3339, "")` 抛错的兼容性问题（返回 `parsing time "" as "2006-01-02T15:04:05Z07:00": cannot parse "" as "2006"`），同时 `BucketInfo.Ctime` 字段类型由 `int` 改为 `time.Time`，未返回时为零值

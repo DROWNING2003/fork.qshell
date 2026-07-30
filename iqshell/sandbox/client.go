@@ -80,6 +80,12 @@ func loadDotEnv() {
 // Returns an error if API Key is missing — sandbox runtime / template endpoints
 // only accept API Key authentication.
 func NewSandboxClient() (*sandbox.Client, error) {
+	return NewSandboxClientWithRetryMax(nil)
+}
+
+// NewSandboxClientWithRetryMax 使用可选的重试上限创建沙箱客户端。
+// retryMax 为 nil 时保留 SDK 默认行为，包括读取 SANDBOX_RETRY_MAX。
+func NewSandboxClientWithRetryMax(retryMax *int) (*sandbox.Client, error) {
 	loadDotEnv()
 
 	apiKey, endpoint := resolveConfig()
@@ -87,7 +93,7 @@ func NewSandboxClient() (*sandbox.Client, error) {
 		return nil, fmt.Errorf("API key not configured for sandbox/template operations: please set %s or %s environment variable", EnvQiniuAPIKey, EnvE2BAPIKey)
 	}
 
-	return buildSandboxClient(apiKey, endpoint, resolveCredentials())
+	return buildSandboxClient(apiKey, endpoint, resolveCredentials(), retryMax)
 }
 
 // NewInjectionRuleClient creates a sandbox client for injection rule operations.
@@ -106,16 +112,17 @@ func NewInjectionRuleClient() (*sandbox.Client, error) {
 	}
 
 	apiKey, endpoint := resolveConfig()
-	return buildSandboxClient(apiKey, endpoint, creds)
+	return buildSandboxClient(apiKey, endpoint, creds, nil)
 }
 
 // buildSandboxClient constructs the underlying SDK client. apiKey may be empty
 // (only meaningful for InjectionRule paths); creds may be nil.
-func buildSandboxClient(apiKey, endpoint string, creds *auth.Credentials) (*sandbox.Client, error) {
+func buildSandboxClient(apiKey, endpoint string, creds *auth.Credentials, retryMax *int) (*sandbox.Client, error) {
 	return sandbox.NewClient(&sandbox.Config{
 		APIKey:      apiKey,
 		Credentials: creds,
 		Endpoint:    endpoint,
+		RetryMax:    retryMax,
 		HTTPClient: &http.Client{
 			Transport: &keepaliveTransport{base: http.DefaultTransport},
 		},

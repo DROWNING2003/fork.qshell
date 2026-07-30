@@ -15,6 +15,7 @@ import (
 // CreateInfo holds parameters for creating a sandbox.
 type CreateInfo struct {
 	TemplateID      string
+	RetryMax        *int
 	Timeout         int32
 	Metadata        string
 	Detach          bool
@@ -35,7 +36,7 @@ func Create(info CreateInfo) {
 		return
 	}
 
-	client, err := sbClient.NewSandboxClient()
+	client, err := sbClient.NewSandboxClientWithRetryMax(info.RetryMax)
 	if err != nil {
 		sbClient.PrintError("%v", err)
 		return

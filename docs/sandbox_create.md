@@ -7,8 +7,8 @@
 
 # 格式
 ```
-qshell sandbox create [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
-qshell sbx cr [template] [-t <seconds>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
+qshell sandbox create [template] [-t <seconds>] [--retry-max <N>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
+qshell sbx cr [template] [-t <seconds>] [--retry-max <N>] [--detach] [-m <metadata>] [-e <KEY=VALUE>...] [--auto-pause] [--injection-rule <ruleID>...] [--inline-injection <spec>...] [--resource <spec>...]
 ```
 
 # 帮助文档
@@ -25,6 +25,7 @@ $ qshell sandbox create --doc
 # 参数
 - `template`：模板 ID（实际创建时必填；命令参数层最多接受 1 个模板参数）
 - `-t, --timeout`：沙箱超时时间（秒）
+- `--retry-max`：创建请求的最大自动重试次数；`0` 禁用重试。未传入时优先读取 `SANDBOX_RETRY_MAX`，未设置则默认重试 5 次
 - `--detach`：创建沙箱但不连接终端，沙箱保持存活直到超时。此参数没有短参数
 - `-m, --metadata`：元数据键值对（格式：key1=value1,key2=value2）
 - `-e, --env-var`：环境变量（KEY=VALUE 格式，可多次指定）
@@ -60,37 +61,42 @@ $ qshell sandbox create my-template --timeout 300
 $ qshell sbx cr my-template -t 300
 ```
 
-3. 分离模式创建（不连接终端，沙箱存活 5 分钟）
+3. 禁用创建请求自动重试
+```
+$ qshell sandbox create my-template --retry-max 0
+```
+
+4. 分离模式创建（不连接终端，沙箱存活 5 分钟）
 ```
 $ qshell sandbox create my-template -t 300 --detach
 $ qshell sbx cr my-template -t 300 --detach
 ```
 
-4. 设置环境变量
+5. 设置环境变量
 ```
 $ qshell sandbox create my-template -e FOO=bar -e BAZ=qux
 $ qshell sbx cr my-template -e FOO=bar -e BAZ=qux
 ```
 
-5. 超时后自动暂停
+6. 超时后自动暂停
 ```
 $ qshell sandbox create my-template -t 300 --auto-pause
 $ qshell sbx cr my-template -t 300 --auto-pause
 ```
 
-6. 添加元数据
+7. 添加元数据
 ```
 $ qshell sandbox create my-template -m env=dev,team=backend
 $ qshell sbx cr my-template -m env=dev,team=backend
 ```
 
-7. 创建时附加注入规则
+8. 创建时附加注入规则
 ```
 $ qshell sandbox create my-template --injection-rule rule-openai --injection-rule rule-http
 $ qshell sbx cr my-template --injection-rule rule-openai --injection-rule rule-http
 ```
 
-8. 创建时附加内联注入配置
+9. 创建时附加内联注入配置
 ```
 $ qshell sandbox create my-template \
     --inline-injection 'type=openai,api-key=sk-xxx' \
@@ -98,13 +104,13 @@ $ qshell sandbox create my-template \
 $ qshell sbx cr my-template --inline-injection 'type=gemini,api-key=sk-gem'
 ```
 
-9. 创建时附加 GitHub 凭证注入（token 通过 `api-key` 传入）
+10. 创建时附加 GitHub 凭证注入（token 通过 `api-key` 传入）
 ```
 $ qshell sandbox create my-template --inline-injection 'type=github,api-key=ghp-xxx,base-url=https://api.github.com/repos/qiniu/*'
 $ qshell sbx cr my-template --inline-injection 'type=github,api-key=ghp-xxx'
 ```
 
-10. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台拉取仓库快照并挂载到指定路径）
+11. 创建时挂载 GitHub 仓库资源（沙箱启动前由平台拉取仓库快照并挂载到指定路径）
 ```
 $ qshell sandbox create my-template \
     --resource 'type=github_repository,url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
@@ -114,7 +120,7 @@ $ qshell sbx cr my-template \
 
 > 同一沙箱内多个 `--resource github_repository` 当前必须共用同一 `token`。
 
-11. 创建时挂载 Kodo bucket 资源（沙箱启动前由平台通过 NFS 代理挂载到指定路径）
+12. 创建时挂载 Kodo bucket 资源（沙箱启动前由平台通过 NFS 代理挂载到指定路径）
 ```
 $ qshell sandbox create my-template \
     --resource 'type=kodo,bucket=my-bucket,mount-path=/mnt/kodo,prefix=datasets/,read-only=true'

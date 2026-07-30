@@ -172,6 +172,29 @@ func TestNewSandboxClient_OKWithAPIKeyOnly(t *testing.T) {
 	assert.NotNil(t, c)
 }
 
+func TestNewSandboxClientWithRetryMax_OverridesEnvironment(t *testing.T) {
+	clearEnvVars(t)
+	stubWorkspaceAccount(t, "", "")
+	os.Setenv(EnvQiniuAPIKey, "k")
+	t.Setenv("SANDBOX_RETRY_MAX", "-1")
+
+	retryMax := 0
+	c, err := NewSandboxClientWithRetryMax(&retryMax)
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+}
+
+func TestNewSandboxClientWithRetryMax_RejectsNegativeValue(t *testing.T) {
+	clearEnvVars(t)
+	stubWorkspaceAccount(t, "", "")
+	os.Setenv(EnvQiniuAPIKey, "k")
+
+	retryMax := -1
+	c, err := NewSandboxClientWithRetryMax(&retryMax)
+	assert.Nil(t, c)
+	assert.EqualError(t, err, "RetryMax must be a non-negative integer")
+}
+
 func TestNewInjectionRuleClient_RequiresCredentials(t *testing.T) {
 	clearEnvVars(t)
 	stubWorkspaceAccount(t, "", "")

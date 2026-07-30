@@ -11,6 +11,7 @@ import (
 // ConnectInfo holds parameters for connecting to a sandbox.
 type ConnectInfo struct {
 	SandboxID string
+	RetryMax  *int
 }
 
 // Connect connects to an existing sandbox terminal.
@@ -21,7 +22,7 @@ func Connect(info ConnectInfo) {
 		return
 	}
 
-	client, err := sbClient.NewSandboxClient()
+	client, err := sbClient.NewSandboxClientWithRetryMax(info.RetryMax)
 	if err != nil {
 		sbClient.PrintError("%v", err)
 		return
