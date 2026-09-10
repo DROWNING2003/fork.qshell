@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/qiniu/go-sdk/v7/sandbox"
@@ -292,6 +293,25 @@ func TestBuildSandboxResources_Kodo(t *testing.T) {
 	}
 }
 
+func TestBuildSandboxResources_KodoWithInlineCredentials(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
+		"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,access-key=test-ak,secret-key=test-sk",
+	})
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v", err)
+	}
+	got := resources[0].Kodo
+	if got == nil {
+		t.Fatal("resource Kodo = nil, want set")
+	}
+	if got.AccessKey == nil || *got.AccessKey != "test-ak" {
+		t.Fatalf("access key = %v, want test-ak", got.AccessKey)
+	}
+	if got.SecretKey == nil || *got.SecretKey != "test-sk" {
+		t.Fatalf("secret key = %v, want test-sk", got.SecretKey)
+	}
+}
+
 func TestBuildSandboxResources_KodoAcceptsMountAliasAndReadonlyAlias(t *testing.T) {
 	resources, err := buildSandboxResources([]string{
 		"type=kodo,bucket=test-bucket,mount=/mnt/kodo,readonly=false",
@@ -350,6 +370,57 @@ func TestBuildSandboxResources_RejectsKodoMissingMountPath(t *testing.T) {
 func TestBuildSandboxResources_RejectsKodoInvalidReadOnly(t *testing.T) {
 	if _, err := buildSandboxResources([]string{"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,read-only=maybe"}); err == nil {
 		t.Fatal("expected invalid kodo read-only to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsIncompleteKodoCredentials(t *testing.T) {
+	if _, err := buildSandboxResources([]string{
+		"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,access-key=test-ak",
+	}); err == nil {
+		t.Fatal("expected incomplete kodo credentials to fail")
+	}
+}
+
+func TestBuildSandboxResources_RejectsEmptyKodoCredentials(t *testing.T) {
+	if _, err := buildSandboxResources([]string{
+		"type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,access-key=,secret-key=",
+	}); err == nil {
+		t.Fatal("expected empty kodo credentials to fail")
+	}
+}
+
+func TestParseSandboxResource_RedactsCredentialsFromErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		spec    string
+		secrets []string
+	}{
+		{
+			name:    "kodo credentials",
+			spec:    "type=kodo,bucket=test-bucket,mount-path=/mnt/kodo,access-key=ak-secret,secret-key=sk-secret,read-only=invalid",
+			secrets: []string{"ak-secret", "sk-secret"},
+		},
+		{
+			name:    "git token",
+			spec:    "type=github_repository,url=https://github.com/qiniu/qshell.git,mount-path=relative,token=ghp-secret",
+			secrets: []string{"ghp-secret"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := parseSandboxResource(tt.spec)
+			if err == nil {
+				t.Fatal("expected invalid resource spec to fail")
+			}
+			for _, secret := range tt.secrets {
+				if strings.Contains(err.Error(), secret) {
+					t.Fatalf("error exposed credential: %v", err)
+				}
+			}
+			if !strings.Contains(err.Error(), "<redacted>") {
+				t.Fatalf("error did not show redaction marker: %v", err)
+			}
+		})
 	}
 }
 
