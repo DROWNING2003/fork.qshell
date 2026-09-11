@@ -449,13 +449,22 @@ func TestBuildSandboxResources_Multiple(t *testing.T) {
 	}
 }
 
-func TestBuildSandboxResources_RejectsConflictingTokens(t *testing.T) {
-	_, err := buildSandboxResources([]string{
+func TestBuildSandboxResources_AllowsDifferentGithubTokens(t *testing.T) {
+	resources, err := buildSandboxResources([]string{
 		"url=https://github.com/owner/a.git,mount-path=/workspace/a,token=ghp-A",
 		"url=https://github.com/owner/b.git,mount-path=/workspace/b,token=ghp-B",
 	})
-	if err == nil {
-		t.Fatal("expected conflicting tokens across --resource to fail")
+	if err != nil {
+		t.Fatalf("buildSandboxResources() error = %v, want no error", err)
+	}
+	if len(resources) != 2 {
+		t.Fatalf("buildSandboxResources() len = %d, want 2", len(resources))
+	}
+	if got := *resources[0].GitRepository.AuthorizationToken; got != "ghp-A" {
+		t.Errorf("first resource token = %q, want ghp-A", got)
+	}
+	if got := *resources[1].GitRepository.AuthorizationToken; got != "ghp-B" {
+		t.Errorf("second resource token = %q, want ghp-B", got)
 	}
 }
 

@@ -6,7 +6,7 @@
 4. `sandbox template build` 支持通过 `--disk-size` 指定新模板的构建磁盘大小，并在构建失败时输出完整构建日志
 
 ## 更新
-1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.28.0`
+1. 升级 `github.com/qiniu/go-sdk/v7` 到 `v7.28.1`
 
 # 2.19.12 (2026-08-11)
 ## 新增

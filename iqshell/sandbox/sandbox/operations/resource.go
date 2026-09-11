@@ -47,13 +47,7 @@ func ListResources(info ResourceListInfo) {
 	}
 
 	ctx := context.Background()
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-	if err != nil {
-		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
-		return
-	}
-
-	resources, err := sb.GetResources(ctx)
+	resources, err := client.GetResources(ctx, info.SandboxID)
 	if err != nil {
 		sbClient.PrintError("list resources for sandbox %s failed: %v", info.SandboxID, err)
 		return
@@ -102,13 +96,7 @@ func UpdateResourceToken(info ResourceUpdateInfo) {
 	}
 
 	ctx := context.Background()
-	sb, err := client.Connect(ctx, info.SandboxID, sandbox.ConnectParams{Timeout: sbClient.ConnectTimeoutCommand})
-	if err != nil {
-		sbClient.PrintError("connect to sandbox %s failed: %v", info.SandboxID, err)
-		return
-	}
-
-	if err := sb.UpdateGitRepositoryResourceToken(ctx, info.ResourceID, info.Token); err != nil {
+	if err := client.UpdateGitRepositoryResourceToken(ctx, info.SandboxID, info.ResourceID, info.Token); err != nil {
 		sbClient.PrintError("update resource %s token failed: %v", info.ResourceID, err)
 		return
 	}

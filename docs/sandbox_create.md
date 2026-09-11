@@ -38,7 +38,7 @@ $ qshell sandbox create --doc
 资源说明：
 - `url` 推荐使用 HTTPS 形式（如 `https://github.com/owner/repo.git`）；若 URL 本身包含逗号，当前键值串格式无法正确表达
 - `mount-path` 必须是沙箱内的绝对路径（POSIX），不接受相对路径；同时给出 `mount-path` 与 `mount` 时两者取值必须一致
-- 同一沙箱内多条 `--resource github_repository` 当前必须共用同一 `token`（受 SDK 侧约束）
+- 每条 `--resource github_repository` 都需要单独提供 `token`；不同仓库资源可以使用不同 `token`
 - `type=kodo` 使用 `bucket` 指定 Kodo bucket，可用 `prefix` 限制挂载的对象名前缀，可用 `read-only=true` 显式只读挂载；`access-key` 与 `secret-key` 必须同时指定，省略时使用 qshell 的默认凭证
 - `--resource` 与 `--inline-injection type=github` 之间的 token 一致性由平台侧校验，CLI 不做跨参数比较
 
@@ -119,7 +119,7 @@ $ qshell sbx cr my-template \
     --resource 'url=https://github.com/owner/repo.git,mount-path=/workspace/repo,token=ghp-xxx'
 ```
 
-> 同一沙箱内多个 `--resource github_repository` 当前必须共用同一 `token`。
+> 每条 `--resource github_repository` 独立携带 `token`，不同仓库资源可以使用不同 `token`。
 
 12. 创建时挂载 Kodo bucket 资源（沙箱启动前由平台通过 NFS 代理挂载到指定路径）
 ```
